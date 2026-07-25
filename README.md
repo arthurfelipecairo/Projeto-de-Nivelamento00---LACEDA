@@ -1,78 +1,81 @@
-# ⚖️ Desafio de Nivelamento LACEDA 2026 - Eixo de Ciência e Engenharia de Dados
 
-Bem-vindo(a) ao projeto de nivelamento da LACEDA! Este desafio foi desenhado para consolidar seus conhecimentos em manipulação, limpeza, análise exploratória e geração de insights.
+#  Projeto de Nivelamento LACEDA 2026 - Eixo de Ciência e Engenharia de Dados
 
-⏱️ **Prazo de Entrega:** 17/07
-
----
-
-## 📊 O Desafio
-Você recebeu um conjunto de dados do departamento de Recursos Humanos de um grande escritório de advocacia (`dados/funcionaris.csv`). 
-
-Sua missão é atuar como Cientista/Engenheiro(a) de Dados para **identificar os principais fatores que estão levando ao desligamento (evasão) dos colaboradores** e apresentar suas conclusões em forma de insights e dashboards.
-
-### 📥 O que a Liga está fornecendo:
-1. Conjunto de dados dos Funcionários (`dados\funcionarios.csv`).
-2. Conjunto de dados dos Departamentos (`dados/departamentos.csv`).
-3. Conjunto de dados das Filiais (`dados/filiais.csv`).
+Repositório do desafio de análise de evasão de colaboradores (Turnover) de um grande escritório de advocacia, aplicando conceitos de **Engenharia de Dados (Arquitetura Medalhão)** e **People Analytics**.
 
 ---
 
-### 📁 Dicionário de Dados (Metadados)
+##  Arquitetura de Dados (Medallion Architecture)
 
-Para guiar sua análise e seus tratamentos, abaixo está a descrição de cada tabela e o significado de suas respectivas colunas:
+O pipeline do projeto foi estruturado em três camadas bem definidas:
 
-#### 1. Tabela: `funcionarios.csv`
-*   **id_colaborador:** Identificador único e numérico de cada funcionário.
-*   **nome:** Nome completo do colaborador.
-*   **genero:** Identidade de gênero declarada pelo profissional.
-*   **nivel:** Nível de senioridade no escritório (Júnior, Pleno, Sênior, Sócio).
-*   **data_admissao:** Data em que o colaborador foi contratado pelo escritório.
-*   **data_promocao:** Data da última promoção do colaborador (pode estar vazia caso ele nunca tenha sido promovido).
-*   **salario_base:** Salário bruto mensal contratual do funcionário.
-*   **percentual_bonus:** Porcentagem do salário anual que o colaborador recebe como bônus por performance.
-*   **id_departamento:** Código identificador do departamento onde o colaborador atua (Chave Estrangeira).
-*   **id_filial:** Código identificador da filial física onde o colaborador está alocado (Chave Estrangeira).
-*   **id_reporta_a:** ID do gestor/líder direto a quem esse funcionário responde (Auto-relacionamento). Sócios não possuem gestores diretos.
-*   **processos_actifs:** Volume de processos jurídicos sob a responsabilidade direta deste advogado no último trimestre.
-*   **horas_extras_mes:** Média de horas extras computadas e prestadas pelo colaborador no último mês.
-*   **score_satisfacao:** Nota de 1.0 a 5.0 atribuída pelo funcionário na pesquisa interna e anônima de clima organizacional.
-*   **home_office:** Campo indicador se o colaborador trabalha em regime 100% remoto.
-*   **status_atual:** Situação do contrato do colaborador no escritório (Ativo ou Desligado).
-
-#### 2. Tabela: `departamentos.csv`
-*   **id_departamento:** Código identificador único do setor jurídico (Chave Primária).
-*   **nome_departamento:** Nome da especialidade/área (Civil, Trabalhista, Corporativo, Tributário).
-*   **id_chefe_departamento:** ID do Sócio responsável pela gestão nacional daquela área.
-
-#### 3. Tabela: `filiais.csv`
-*   **id_filial:** Código identificador único da unidade física do escritório (Chave Primária).
-*   **cidade:** Cidade onde a filial está localizada.
-*   **estado:** Unidade Federativa (UF) da filial.
-*   **id_socio_diretor:** ID do Sócio regional que lidera a operação daquela filial específica.
-
-> ⚠️ **Atenção:** Os dados extraídos dos sistemas internos do escritório podem conter ruídos, falhas de digitação, omissões ou problemas de formatação. Parte fundamental da sua avaliação será identificar, limpar e padronizar essas inconsistências antes de iniciar a sua análise estatística.
+1. **🥉 Camada Bronze (`camada bronze/`):** Ingestão dos arquivos brutos originais (`funcionarios.csv`, `departamentos.csv`, `filiais.csv`) sem modificações estruturais.
+2. **🥈 Camada Prata (`transformacao_prata.sql`):** Tratamento de valores nulos, padronização de textos e gênero, conversão de tipos monetários e de datas, além da criação de colunas derivadas (`flag_desligado`, `tempo_casa_anos`). Persistido em banco relacional PostgreSQL.
+3. **🥇 Camada Ouro (`transformacao_ouro.sql`):** Tabelas agregadas de negócio prontas para visualização analítica, relatórios gerenciais e tomada de decisão estratégica.
 
 ---
 
-### 📤 O que você deve entregar:
-Para concluir o nivelamento, você deve commitar neste repositório (via Pull Request ou em sua branch de entrega):
-- [ ] **Notebook (.ipynb):** Contendo todo o código de tratamento, análise exploratória e estatística.
-- [ ] **Documentação/Relatório:** Explicando as premissas adotadas e a conclusão final.
-- [ ] **Dashboards / Visualizações:** Gráficos claros que facilitem a tomada de decisão.
-- [ ] *(Opcional)* Modelo preditivo, análise estatística avançada ou dados complementares.
+##  Principais Insights da Análise Exploratória (EDA)
+
+Através do Jupyter Notebook (`data_view.ipynb`), identificamos que o Turnover não ocorre de forma aleatória, sendo ditado por três pilares críticos:
+
+* **Esgotamento (Burnout):** Correlação direta e clara entre o volume excessivo de horas extras e os pedidos de demissão.
+* **Estagnação de Carreira:** Pico de evasão concentrado em profissionais de nível Pleno, situados entre o 4º e o 8º ano de casa sem histórico de promoção.
+* **Gargalo Regional:** Alerta vermelho na filial do Rio de Janeiro, com destaque negativo para o departamento Trabalhista (taxa de evasão superior a 50%).
 
 ---
 
-## ⚙️ Como Participar e Entregar
-1. Faça um **Fork** deste repositório para a sua conta pessoal.
-2. Crie uma branch com o seu nome: `git checkout -b nome-sobrenome`.
-3. Desenvolva seu projeto na pasta raiz ou em uma pasta própria com seu nome.
-4. Ao finalizar, abra um **Pull Request** para o repositório principal da LACEDA.
+##  Como Executar o Projeto em sua Máquina
 
-## 📒Materiais de Apoio:
-1. https://www.youtube.com/watch?v=Z_SPrzlT4Fc&list=PLucm8g_ezqNoAkYKXN_zWupyH6hQCAwxY
-2. https://www.youtube.com/watch?v=NCG9niOlm40&list=PLHz_AreHm4dkBs-795Dsgvau_ekxg8g1r&index=7
-3. https://www.youtube.com/watch?v=Dnt4H_WCrWE&list=PLbIBj8vQhvm2WT-pjGS5x7zUzmh4VgvRk&index=11
+Siga os passos abaixo para rodar o pipeline completo em ambiente local:
 
-*Nota: A segunda parte da avaliação consistirá em uma entrevista com banco de perguntas conceituais sorteadas e a apresentação do seu projeto.*
+### 1. Clone o repositório
+```bash
+git clone <url-do-seu-fork>
+cd <nome-da-pasta>
+
+
+```
+### 2. Configure o ambiente seguro (`.env`)
+
+Crie um arquivo chamado `.env` na raiz do diretório contendo as suas credenciais locais do PostgreSQL:
+
+```
+USUARIO_BANCO=postgres
+SENHA_BANCO=sua_senha
+NOME_BANCO=laceda_db
+
+```
+
+### 3. Execute a ingestão (Bronze para o Banco)
+
+Execute o script em Python para ler os arquivos CSV brutos e carregá-los para o banco relacional:
+
+```bash
+python import.py
+
+```
+
+### 4. Execute as transformações SQL (Camada Prata e Ouro)
+
+Rode os scripts de transformação (`transformacao_prata.sql` e `transformacao_ouro.sql`) no seu SGBD de preferência (pgAdmin ou DBeaver) para gerar as tabelas tratadas e agregadas.
+
+### 5. Abra o Dashboard Analítico
+
+Inicie o Jupyter Notebook e abra o arquivo `data_view.ipynb` para visualizar os gráficos estatísticos e as conclusões executivas:
+
+```bash
+jupyter notebook data_view.ipynb
+
+```
+
+---
+
+## Conclusão e Recomendações Executivas
+
+Com base nos dados explorados, propõe-se o seguinte plano de ação para a diretoria e o RH do escritório:
+
+* **Intervenção Imediata:** Auditoria e reestruturação na liderança e na distribuição de processos do setor Trabalhista na filial do Rio de Janeiro.
+* **Prevenção de Burnout:** Estabelecimento de um teto preventivo para a quantidade de horas extras mensais permitidas por colaborador.
+* **Plano de Retenção:** Criação de ciclos estruturados de revisão de carreira para reter profissionais plenos antes do "ponto de quebra" de tempo de casa.
+
