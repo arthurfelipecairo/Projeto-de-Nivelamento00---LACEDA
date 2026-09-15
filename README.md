@@ -1,78 +1,106 @@
-# ⚖️ Desafio de Nivelamento LACEDA 2026 - Eixo de Ciência e Engenharia de Dados
 
-Bem-vindo(a) ao projeto de nivelamento da LACEDA! Este desafio foi desenhado para consolidar seus conhecimentos em manipulação, limpeza, análise exploratória e geração de insights.
+# Pipeline de People Analytics — Análise de Turnover
 
-⏱️ **Prazo de Entrega:** 17/07
+Projeto desenvolvido a partir do desafio de nivelamento de 2026 do **LACEDA — Grupo de Estudos em Engenharia e Ciência de Dados**. O objetivo é estruturar um pipeline de dados para analisar a evasão de colaboradores (*turnover*) de um escritório de advocacia, aplicando conceitos de Engenharia de Dados e People Analytics.
 
----
+## Tecnologias
 
-## 📊 O Desafio
-Você recebeu um conjunto de dados do departamento de Recursos Humanos de um grande escritório de advocacia (`dados/funcionaris.csv`). 
+- Python, Pandas e SQLAlchemy
+- PostgreSQL
+- SQL
+- Jupyter Notebook
 
-Sua missão é atuar como Cientista/Engenheiro(a) de Dados para **identificar os principais fatores que estão levando ao desligamento (evasão) dos colaboradores** e apresentar suas conclusões em forma de insights e dashboards.
+## Arquitetura de dados
 
-### 📥 O que a Liga está fornecendo:
-1. Conjunto de dados dos Funcionários (`dados\funcionarios.csv`).
-2. Conjunto de dados dos Departamentos (`dados/departamentos.csv`).
-3. Conjunto de dados das Filiais (`dados/filiais.csv`).
+O pipeline segue a Arquitetura Medalhão, separando os dados por nível de tratamento:
 
----
+1. **Bronze — `01-camada-bronze/`**: arquivos CSV brutos de colaboradores, departamentos e filiais.
+2. **Prata — `02-camada-prata/`**: ingestão dos dados no PostgreSQL e limpeza, padronização e integração das fontes.
+3. **Ouro — `03-camada-ouro/`**: criação de uma tabela de indicadores para análise de turnover.
 
-### 📁 Dicionário de Dados (Metadados)
+```text
+CSVs brutos → PostgreSQL (tabelas raw) → camada prata → KPIs na camada ouro → análise exploratória
+```
 
-Para guiar sua análise e seus tratamentos, abaixo está a descrição de cada tabela e o significado de suas respectivas colunas:
+### Camada Bronze
 
-#### 1. Tabela: `funcionarios.csv`
-*   **id_colaborador:** Identificador único e numérico de cada funcionário.
-*   **nome:** Nome completo do colaborador.
-*   **genero:** Identidade de gênero declarada pelo profissional.
-*   **nivel:** Nível de senioridade no escritório (Júnior, Pleno, Sênior, Sócio).
-*   **data_admissao:** Data em que o colaborador foi contratado pelo escritório.
-*   **data_promocao:** Data da última promoção do colaborador (pode estar vazia caso ele nunca tenha sido promovido).
-*   **salario_base:** Salário bruto mensal contratual do funcionário.
-*   **percentual_bonus:** Porcentagem do salário anual que o colaborador recebe como bônus por performance.
-*   **id_departamento:** Código identificador do departamento onde o colaborador atua (Chave Estrangeira).
-*   **id_filial:** Código identificador da filial física onde o colaborador está alocado (Chave Estrangeira).
-*   **id_reporta_a:** ID do gestor/líder direto a quem esse funcionário responde (Auto-relacionamento). Sócios não possuem gestores diretos.
-*   **processos_actifs:** Volume de processos jurídicos sob a responsabilidade direta deste advogado no último trimestre.
-*   **horas_extras_mes:** Média de horas extras computadas e prestadas pelo colaborador no último mês.
-*   **score_satisfacao:** Nota de 1.0 a 5.0 atribuída pelo funcionário na pesquisa interna e anônima de clima organizacional.
-*   **home_office:** Campo indicador se o colaborador trabalha em regime 100% remoto.
-*   **status_atual:** Situação do contrato do colaborador no escritório (Ativo ou Desligado).
+Os arquivos `funcionarios.csv`, `departamentos.csv` e `filiais.csv` são mantidos como fonte bruta em `01-camada-bronze/`.
 
-#### 2. Tabela: `departamentos.csv`
-*   **id_departamento:** Código identificador único do setor jurídico (Chave Primária).
-*   **nome_departamento:** Nome da especialidade/área (Civil, Trabalhista, Corporativo, Tributário).
-*   **id_chefe_departamento:** ID do Sócio responsável pela gestão nacional daquela área.
+### Camada Prata
 
-#### 3. Tabela: `filiais.csv`
-*   **id_filial:** Código identificador único da unidade física do escritório (Chave Primária).
-*   **cidade:** Cidade onde a filial está localizada.
-*   **estado:** Unidade Federativa (UF) da filial.
-*   **id_socio_diretor:** ID do Sócio regional que lidera a operação daquela filial específica.
+O script `02-camada-prata/import.py` carrega os arquivos CSV em tabelas brutas no PostgreSQL. Em seguida, `02-camada-prata/transformacao_prata.sql` realiza os seguintes tratamentos:
 
-> ⚠️ **Atenção:** Os dados extraídos dos sistemas internos do escritório podem conter ruídos, falhas de digitação, omissões ou problemas de formatação. Parte fundamental da sua avaliação será identificar, limpar e padronizar essas inconsistências antes de iniciar a sua análise estatística.
+- padronização de nomes, gênero, departamentos e cidades;
+- conversão de datas e valores monetários;
+- tratamento de valores ausentes em satisfação;
+- integração de colaboradores, departamentos e filiais;
+- criação de indicadores como promoção e remuneração total estimada.
 
----
+### Camada Ouro
 
-### 📤 O que você deve entregar:
-Para concluir o nivelamento, você deve commitar neste repositório (via Pull Request ou em sua branch de entrega):
-- [ ] **Notebook (.ipynb):** Contendo todo o código de tratamento, análise exploratória e estatística.
-- [ ] **Documentação/Relatório:** Explicando as premissas adotadas e a conclusão final.
-- [ ] **Dashboards / Visualizações:** Gráficos claros que facilitem a tomada de decisão.
-- [ ] *(Opcional)* Modelo preditivo, análise estatística avançada ou dados complementares.
+O script `03-camada-ouro/transformacao_ouro.sql` cria a tabela `tb_kpi_rh_ouro`, com indicadores agregados por departamento, cidade e nível:
 
----
+- total de colaboradores, promovidos e desligados;
+- taxa de evasão;
+- média de horas extras;
+- média de satisfação;
+- média salarial.
 
-## ⚙️ Como Participar e Entregar
-1. Faça um **Fork** deste repositório para a sua conta pessoal.
-2. Crie uma branch com o seu nome: `git checkout -b nome-sobrenome`.
-3. Desenvolva seu projeto na pasta raiz ou em uma pasta própria com seu nome.
-4. Ao finalizar, abra um **Pull Request** para o repositório principal da LACEDA.
+## Como executar localmente
 
-## 📒Materiais de Apoio:
-1. https://www.youtube.com/watch?v=Z_SPrzlT4Fc&list=PLucm8g_ezqNoAkYKXN_zWupyH6hQCAwxY
-2. https://www.youtube.com/watch?v=NCG9niOlm40&list=PLHz_AreHm4dkBs-795Dsgvau_ekxg8g1r&index=7
-3. https://www.youtube.com/watch?v=Dnt4H_WCrWE&list=PLbIBj8vQhvm2WT-pjGS5x7zUzmh4VgvRk&index=11
+### 1. Clone o repositório
 
-*Nota: A segunda parte da avaliação consistirá em uma entrevista com banco de perguntas conceituais sorteadas e a apresentação do seu projeto.*
+```bash
+git clone <URL_DO_REPOSITORIO>
+cd <NOME_DO_REPOSITORIO>
+```
+
+### 2. Instale as dependências
+
+```bash
+pip install pandas sqlalchemy psycopg2-binary python-dotenv jupyter
+```
+
+### 3. Configure o banco de dados
+
+Crie um arquivo `.env` na raiz do repositório com as credenciais do PostgreSQL local:
+
+```env
+USUARIO_BANCO=postgres
+SENHA_BANCO=sua_senha
+NOME_BANCO=laceda_db
+```
+
+### 4. Carregue a camada Bronze no PostgreSQL
+
+Na raiz do repositório, execute:
+
+```bash
+python 02-camada-prata/import.py
+```
+
+O script cria ou substitui as tabelas `raw_funcionarios`, `raw_departamentos` e `raw_filiais`.
+
+### 5. Execute as transformações SQL
+
+No pgAdmin, DBeaver ou outro cliente PostgreSQL, execute nesta ordem:
+
+1. `02-camada-prata/transformacao_prata.sql`
+2. `03-camada-ouro/transformacao_ouro.sql`
+
+### 6. Explore os dados
+
+Abra `02-camada-prata/data_view.ipynb` no Jupyter Notebook:
+
+```bash
+jupyter notebook 02-camada-prata/data_view.ipynb
+```
+
+## Resultados da análise
+
+A análise exploratória investiga padrões de turnover associados a horas extras, progressão de carreira, nível profissional, departamento e filial. Os indicadores da camada ouro apoiam a identificação de grupos prioritários para ações de retenção.
+
+## Origem
+
+Este repositório é um fork e uma implementação do projeto de nivelamento do LACEDA. As transformações, documentação e análises presentes neste repositório representam a evolução realizada neste fork.
+
